@@ -7,6 +7,9 @@ require("dotenv").config(); //import dotenv
 const { DB_URI } = process.env; //to grab the same variable from the dotenv file
 const cors = require("cors"); //For disabling default browser security
 const Contact = require("./models/contact"); //importing the model schema
+const User = require("./models/user");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
 //Middleware
 server.use(express.json()); //to ensure data is trasmitted as json
@@ -28,6 +31,23 @@ mongoose
 //Root route
 server.get("/", (request, response) => {
   response.send("Server is Live!");
+});
+
+//register new user route
+server.post("/register", async (request, response) => {
+  const { username, password } = request.body;
+  try {
+    //hashing a password need bcrypt and salt rounds as an int
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({
+      username,
+      password: hashedPassword,
+    });
+    await newUser.save();
+    response.send({message: "User created!" });
+  } catch (error) {
+    response.status(500).send(error.message);
+  }
 });
 
 //To GET all the data from contacts collection
